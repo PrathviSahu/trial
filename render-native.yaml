@@ -1,0 +1,23 @@
+services:
+  # Backend Web Service - Native Java (no Docker)
+  - type: web
+    name: factracku-backend
+    env: java
+    repo: https://github.com/PrathviSahu/FacetrackU.git
+    rootDir: ./backend
+    plan: free
+    region: oregon
+    buildCommand: "mvn clean package -DskipTests"
+    startCommand: "java -jar target/major-project-1.0.0.jar --server.port=${PORT:-8080}"
+    healthCheckPath: /api/actuator/health
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?prepareThreshold=0
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres.mvgqvrlohtzklbtquumw
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        value: https://your-domain.vercel.app
