@@ -1,0 +1,47 @@
+# .gitignore for Face Attendance project
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.idea/
+*.log
+*.tmp
+*.swp
+*.swo
+*.out
+*.DS_Store
+# Maven wrapper
+.mvn/
+# Gradle files (if any)
+.gradle/
+build/
+# Node / React
+node_modules/
+/build/
+/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Environment files
+.env
+.env.*
+# IDE specific
+.vscode/
+*.code-workspace
+# OS generated files
+.DS_Store
+Thumbs.db
+# Logs
+logs/
+# Supabase local files (if any)
+/.supabase/
+# Docker
+docker-compose.override.yml
+Dockerfile.dev
+# Misc
+*.iml
+*.sublime-project
+*.sublime-workspace
