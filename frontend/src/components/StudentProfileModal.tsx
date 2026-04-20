@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -82,7 +83,7 @@ const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
     setIsLoading(true);
     try {
       // Fetch all attendance records
-      const response = await fetch('http://localhost:8080/api/attendance');
+      const response = await fetch(apiUrl("/attendance"));
       const data = await response.json();
 
       if (data.success && data.data) {

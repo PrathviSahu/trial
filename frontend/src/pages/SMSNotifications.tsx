@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -47,7 +48,7 @@ const SMSNotifications: React.FC = () => {
 
     const loadHistory = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/sms/history');
+            const res = await fetch(apiUrl("/sms/history"));
             const data = await res.json();
             if (data.success) setHistory(data.messages || []);
         } catch { toast.error('Failed to load SMS history'); }
@@ -55,7 +56,7 @@ const SMSNotifications: React.FC = () => {
 
     const loadStudents = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/students?size=1000');
+            const res = await fetch(apiUrl("/students?size=1000"));
             const data = await res.json();
             if (data.success) setStudents(data.data?.content || data.data || []);
         } catch { }
@@ -64,7 +65,7 @@ const SMSNotifications: React.FC = () => {
     const sendLowAttendanceAlerts = async () => {
         setIsSending(true);
         try {
-            const res = await fetch(`http://localhost:8080/api/sms/alerts/low-attendance?threshold=${threshold}`, { method: 'POST' });
+            const res = await fetch(apiUrl(`/sms/alerts/low-attendance?threshold=${threshold}`), { method: 'POST' });
             const data = await res.json();
             if (data.success) {
                 toast.success(`${data.smsSent} SMS alerts sent`);
@@ -78,7 +79,7 @@ const SMSNotifications: React.FC = () => {
         if (!adminPhone.trim()) { toast.error('Enter admin phone number'); return; }
         setIsSending(true);
         try {
-            const res = await fetch(`http://localhost:8080/api/sms/summary/daily?phone=${encodeURIComponent(adminPhone)}`, { method: 'POST' });
+            const res = await fetch(apiUrl(`/sms/summary/daily?phone=${encodeURIComponent(adminPhone)}`), { method: 'POST' });
             const data = await res.json();
             if (data.success) { toast.success('Daily summary SMS sent'); loadHistory(); }
             else toast.error(data.message);
@@ -90,7 +91,7 @@ const SMSNotifications: React.FC = () => {
         if (!selectedStudentId || !customMessage.trim()) { toast.error('Select student and enter message'); return; }
         setIsSending(true);
         try {
-            const res = await fetch('http://localhost:8080/api/sms/send', {
+            const res = await fetch(apiUrl("/sms/send"), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ studentId: selectedStudentId, message: customMessage }),
@@ -108,7 +109,7 @@ const SMSNotifications: React.FC = () => {
 
     const clearHistory = async () => {
         try {
-            await fetch('http://localhost:8080/api/sms/history', { method: 'DELETE' });
+            await fetch(apiUrl("/sms/history"), { method: 'DELETE' });
             setHistory([]);
             toast.success('SMS history cleared');
         } catch { toast.error('Error'); }

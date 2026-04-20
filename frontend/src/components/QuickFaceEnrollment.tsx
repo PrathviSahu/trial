@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, CheckCircle, XCircle, Zap, User, AlertTriangle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -87,7 +88,7 @@ const QuickFaceEnrollment: React.FC<QuickFaceEnrollmentProps> = ({
 
   const loadStudents = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/students?page=0&size=100');
+      const response = await fetch(apiUrl("/students?page=0&size=100"));
       const data = await response.json();
       
       if (data.success && data.data?.content) {

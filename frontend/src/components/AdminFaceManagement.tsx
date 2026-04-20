@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { Users, Trash2, RotateCcw, Download, Upload, Search, Filter, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -43,7 +44,7 @@ const AdminFaceManagement: React.FC<AdminFaceManagementProps> = ({ onClose }) =>
       setLoading(true);
       
       // Get all students from backend
-      const response = await fetch('http://localhost:8080/api/students');
+      const response = await fetch(apiUrl("/students"));
       if (response.ok) {
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
@@ -115,7 +116,7 @@ const AdminFaceManagement: React.FC<AdminFaceManagementProps> = ({ onClose }) =>
           
           // Also delete from backend
           try {
-            await fetch(`http://localhost:8080/api/students/${studentId}/face-enrollment`, {
+            await fetch(apiUrl(`/students/${studentId}/face-enrollment`), {
               method: 'DELETE'
             });
           } catch (error) {

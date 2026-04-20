@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -27,10 +28,10 @@ const ProfessionalReports: React.FC = () => {
       
       switch (type) {
         case 'comprehensive':
-          url = `http://localhost:8080/api/reports/excel/comprehensive?department=${selectedDepartment}&startDate=${startDate}&endDate=${endDate}`;
+          url = apiUrl(`/reports/excel/comprehensive?department=${selectedDepartment}&startDate=${startDate}&endDate=${endDate}`);
           break;
         case 'summary':
-          url = 'http://localhost:8080/api/reports/excel/summary';
+          url = apiUrl("/reports/excel/summary");
           break;
         case 'department':
           if (!selectedDepartment) {
@@ -38,7 +39,7 @@ const ProfessionalReports: React.FC = () => {
             setIsGenerating(false);
             return;
           }
-          url = `http://localhost:8080/api/reports/excel/department/${selectedDepartment}`;
+          url = apiUrl(`/reports/excel/department/${selectedDepartment}`);
           break;
       }
 

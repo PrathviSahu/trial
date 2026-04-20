@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   Calendar,
@@ -103,7 +104,7 @@ const AttendanceReports: React.FC = () => {
       }
 
       // Fetch attendance records from API
-      const response = await fetch(`http://localhost:8080/api/attendance/records?startDate=${startDate}&endDate=${endDate}&size=1000`);
+      const response = await fetch(apiUrl(`/attendance/records?startDate=${startDate}&endDate=${endDate}&size=1000`));
       const data = await response.json();
 
       if (data.success) {

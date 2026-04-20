@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Mail, Phone, UserCheck, TrendingUp, Calendar, Award, ArrowLeft, Eye, EyeOff, Lock } from 'lucide-react';
@@ -47,7 +48,7 @@ const GuardianPortal: React.FC = () => {
     setIsTypingAfterError(false);
     
     try {
-      const response = await fetch('http://localhost:8080/api/guardians/login', {
+      const response = await fetch(apiUrl("/guardians/login"), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -76,7 +77,7 @@ const GuardianPortal: React.FC = () => {
 
   const loadAttendanceData = async (guardianId: number) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/guardians/${guardianId}/student-attendance`);
+      const response = await fetch(apiUrl(`/guardians/${guardianId}/student-attendance`));
       const data = await response.json();
       
       if (data.success) {

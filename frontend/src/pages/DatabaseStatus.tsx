@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Database, Users, CheckCircle, XCircle } from 'lucide-react';
@@ -16,10 +17,10 @@ const DatabaseStatus: React.FC = () => {
   const loadDatabaseStatus = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:8080/api/students/enrolled-faces');
+      const response = await axios.get(apiUrl("/students/enrolled-faces"));
       setEnrolledCount(response.data.data?.length || 0);
       
-      const allStudents = await axios.get('http://localhost:8080/api/students');
+      const allStudents = await axios.get(apiUrl("/students"));
       setTotalStudents(allStudents.data.data?.totalElements || 0);
       
       setIsConnected(true);

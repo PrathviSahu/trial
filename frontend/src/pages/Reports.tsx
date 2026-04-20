@@ -34,7 +34,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-import { DEPARTMENTS, Department } from '../config/api';
+import { apiUrl, DEPARTMENTS, Department } from '../config/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import AttendanceReports from '../components/AttendanceReports';
 import AttendanceCalendar from '../components/AttendanceCalendar';
@@ -135,7 +135,7 @@ const Reports: React.FC = () => {
 
   const loadSubjects = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/attendance/subjects');
+      const response = await fetch(apiUrl("/attendance/subjects"));
       const data = await response.json();
       
       if (data.success && data.data) {
@@ -151,10 +151,10 @@ const Reports: React.FC = () => {
     try {
       // Fetch real data from backend
       const [studentsRes, attendanceRes, todayStatsRes, departmentStatsRes] = await Promise.all([
-        fetch('http://localhost:8080/api/students?size=1000'),
-        fetch('http://localhost:8080/api/attendance'),
-        fetch('http://localhost:8080/api/attendance/stats/today'),
-        fetch('http://localhost:8080/api/students/stats/department')
+        fetch(apiUrl("/students?size=1000")),
+        fetch(apiUrl("/attendance")),
+        fetch(apiUrl("/attendance/stats/today")),
+        fetch(apiUrl("/students/stats/department"))
       ]);
 
       const studentsData = await studentsRes.json();
@@ -301,7 +301,7 @@ const Reports: React.FC = () => {
       if (filters.department) params.append('department', filters.department);
       if (filters.subject) params.append('subject', filters.subject);
       
-      const response = await fetch(`http://localhost:8080/api/attendance?${params.toString()}`);
+      const response = await fetch(apiUrl(`/attendance?${params.toString()}`));
       const data = await response.json();
       
       if (!data.success) {

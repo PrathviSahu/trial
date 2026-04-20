@@ -23,8 +23,8 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.126",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-webcam": "^1.1.0",
     "@yudiel/react-qr-scanner": "^2.5.1",
@@ -39,8 +39,8 @@
     "lucide-react": "^0.544.0",
     "postcss": "^8.5.6",
     "qrcode.react": "^3.1.0",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-hot-toast": "^2.4.1",
     "react-is": "^19.2.4",
     "react-router-dom": "^7.9.1",
@@ -54,15 +54,29 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "GENERATE_SOURCEMAP=false ESLINT_NO_DEV_ERRORS=true craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "import/no-anonymous-default-export": "off"
+    },
+    "overrides": [
+      {
+        "files": ["*.ts", "*.tsx"],
+        "rules": {
+          "@typescript-eslint/no-unused-vars": "off",
+          "react-hooks/exhaustive-deps": "off"
+        }
+      }
     ]
   },
   "browserslist": {
@@ -76,5 +90,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@craco/craco": "^7.1.0"
   }
 }

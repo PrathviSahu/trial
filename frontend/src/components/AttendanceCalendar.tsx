@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -53,8 +54,8 @@ const AttendanceCalendar: React.FC = () => {
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
       const [attendanceRes, studentsRes] = await Promise.all([
-        fetch('http://localhost:8080/api/attendance'),
-        fetch('http://localhost:8080/api/students?size=1000')
+        fetch(apiUrl("/attendance")),
+        fetch(apiUrl("/students?size=1000"))
       ]);
 
       const attendanceData = await attendanceRes.json();

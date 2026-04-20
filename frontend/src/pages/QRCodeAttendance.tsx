@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
@@ -90,7 +91,7 @@ const QRCodeAttendance: React.FC = () => {
         if (!activeQR || isRotating) return;
         setIsRotating(true);
         try {
-            const res = await fetch('http://localhost:8080/api/qr-attendance/session/rotate', {
+            const res = await fetch(apiUrl("/qr-attendance/session/rotate"), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionCode: activeQR }),
@@ -107,7 +108,7 @@ const QRCodeAttendance: React.FC = () => {
 
     const loadSessions = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/qr-attendance/sessions');
+            const res = await fetch(apiUrl("/qr-attendance/sessions"));
             const data = await res.json();
             if (data.success) setSessions(data.sessions || []);
         } catch { }
@@ -115,7 +116,7 @@ const QRCodeAttendance: React.FC = () => {
 
     const loadStudents = async () => {
         try {
-            const res = await fetch('http://localhost:8080/api/students?size=1000');
+            const res = await fetch(apiUrl("/students?size=1000"));
             const data = await res.json();
             if (data.success) setStudents(data.data?.content || data.data || []);
         } catch { }
@@ -125,7 +126,7 @@ const QRCodeAttendance: React.FC = () => {
         if (!subject.trim()) { toast.error('Subject is required'); return; }
         setIsGenerating(true);
         try {
-            const res = await fetch('http://localhost:8080/api/qr-attendance/session/generate', {
+            const res = await fetch(apiUrl("/qr-attendance/session/generate"), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ subject, department, faculty, validMinutes }),
@@ -153,7 +154,7 @@ const QRCodeAttendance: React.FC = () => {
         }
         setIsMarking(true);
         try {
-            const res = await fetch('http://localhost:8080/api/qr-attendance/mark', {
+            const res = await fetch(apiUrl("/qr-attendance/mark"), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionCode: codeToUse.trim().toUpperCase(), studentId: selectedStudentId }),

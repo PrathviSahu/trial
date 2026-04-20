@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useRef } from 'react';
 import { Upload, Download, Users, AlertCircle, CheckCircle, X, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -123,7 +124,7 @@ const BulkStudentImport: React.FC<BulkImportProps> = ({ isOpen, onClose, onImpor
         }
         
         try {
-          const response = await fetch('http://localhost:8080/api/students', {
+          const response = await fetch(apiUrl("/students"), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

@@ -1,6 +1,16 @@
 // API Configuration
+export const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:8080/api').replace(/\/+$/, '');
+
+export const apiUrl = (path: string = ''): string => {
+  if (!path) {
+    return API_BASE_URL;
+  }
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+};
+
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
+  BASE_URL: API_BASE_URL,
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
 };

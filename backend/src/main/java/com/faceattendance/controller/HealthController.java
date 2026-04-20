@@ -14,10 +14,6 @@ import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.sql.Connection;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Health Check Controller
@@ -26,7 +22,7 @@ import java.util.Map;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api")
+@RequestMapping
 @Slf4j
 public class HealthController {
 
@@ -57,7 +53,7 @@ public class HealthController {
                 healthInfo.put("databaseError", e.getMessage());
             }
             
-            return ResponseEntity.ok(Map.of("status", "UP", "message", "AI Face Attendance System is running successfully!"));
+            return ResponseEntity.ok(healthInfo);
             
         } catch (Exception e) {
             log.error("Health check failed: {}", e.getMessage());
@@ -110,7 +106,7 @@ public class HealthController {
             
             systemInfo.put("timestamp", LocalDateTime.now());
             
-            return ResponseEntity.ok(Map.of("status", "UP", "message", "Database connection successful"));
+            return ResponseEntity.ok(systemInfo);
             
         } catch (Exception e) {
             log.error("Error getting system info: {}", e.getMessage());

@@ -21,7 +21,7 @@ import { toast } from 'react-hot-toast';
 import BulkStudentImport from '../components/BulkStudentImport';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Student, studentService } from '../services/studentService';
-import { DEPARTMENTS, Department } from '../config/api';
+import { apiUrl, DEPARTMENTS, Department } from '../config/api';
 
 interface StudentFormData {
   ienNumber: string;
@@ -277,7 +277,7 @@ const StudentManagement: React.FC = () => {
       console.log('🔍 Main form sending student:', studentData);
       
       // Use direct fetch like the debug component
-      const response = await fetch('http://localhost:8080/api/students', {
+      const response = await fetch(apiUrl("/students"), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(studentData)
@@ -385,7 +385,7 @@ const StudentManagement: React.FC = () => {
     if (!selectedStudent) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/students/${selectedStudent.id}/face-enrollment`, {
+      const response = await fetch(apiUrl(`/students/${selectedStudent.id}/face-enrollment`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -423,7 +423,7 @@ const StudentManagement: React.FC = () => {
     if (!confirmRemove) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/students/${student.id}/remove-face`, {
+      const response = await fetch(apiUrl(`/students/${student.id}/remove-face`), {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });

@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -43,7 +44,7 @@ const AttendanceCertificate: React.FC = () => {
     const loadStudents = async () => {
         try {
             setIsLoadingStudents(true);
-            const res = await fetch('http://localhost:8080/api/students?size=1000');
+            const res = await fetch(apiUrl("/students?size=1000"));
             const data = await res.json();
             if (data.success) {
                 const list: Student[] = data.data?.content || data.data || [];
@@ -65,7 +66,7 @@ const AttendanceCertificate: React.FC = () => {
         setShowCertificate(false);
         try {
             // Fetch attendance records for this student via all attendance records
-            const res = await fetch('http://localhost:8080/api/attendance');
+            const res = await fetch(apiUrl("/attendance"));
             const data = await res.json();
 
             let presentCount = 0;
@@ -76,7 +77,7 @@ const AttendanceCertificate: React.FC = () => {
             }
 
             // Also get student's total for percentage context
-            const studentsRes = await fetch('http://localhost:8080/api/students?size=1000');
+            const studentsRes = await fetch(apiUrl("/students?size=1000"));
             const studentsData = await studentsRes.json();
             const totalStudents = studentsData.data?.content?.length || 0;
 

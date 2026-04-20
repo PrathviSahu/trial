@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -130,11 +131,11 @@ const Dashboard: React.FC = () => {
 
         // Fetch real data from backend
         const [studentsRes, todayStatsRes, departmentStatsRes, attendanceRes, predictionsRes] = await Promise.all([
-          fetch('http://localhost:8080/api/students?size=1000'),
-          fetch('http://localhost:8080/api/attendance/stats/today'),
-          fetch('http://localhost:8080/api/students/stats/department'),
-          fetch('http://localhost:8080/api/attendance'),
-          fetch('http://localhost:8080/api/predictions/all'),
+          fetch(apiUrl("/students?size=1000")),
+          fetch(apiUrl("/attendance/stats/today")),
+          fetch(apiUrl("/students/stats/department")),
+          fetch(apiUrl("/attendance")),
+          fetch(apiUrl("/predictions/all")),
         ]);
 
         const studentsData = await studentsRes.json();

@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, CheckCircle, XCircle, User } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -47,7 +48,7 @@ const SimpleFaceEnrollment: React.FC<Props> = ({ onClose, onComplete }) => {
     // Load students
     try {
       console.log('📡 Fetching students from API...');
-      const response = await fetch('http://localhost:8080/api/students');
+      const response = await fetch(apiUrl("/students"));
       console.log('📡 Response status:', response.status);
       
       const data = await response.json();

@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 export interface AttendanceRecord {
   id?: number;
   studentId: number;
@@ -34,7 +35,7 @@ export interface SlotAttendanceRecord {
 }
 
 class AttendanceService {
-  private baseUrl = 'http://localhost:8080/api';
+  private baseUrl = apiUrl("");
 
   // Mark attendance for a student (face recognition flow)
   async markAttendance(studentId: number, confidence: number = 1.0): Promise<boolean> {

@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -70,11 +71,11 @@ const LeaveManagement: React.FC = () => {
         setIsLoading(true);
         try {
             const url = filter
-                ? `http://localhost:8080/api/leave?status=${filter}`
-                : 'http://localhost:8080/api/leave';
+                ? apiUrl(`/leave?status=${filter}`)
+                : apiUrl("/leave");
             const [leavesRes, studentsRes] = await Promise.all([
                 fetch(url),
-                fetch('http://localhost:8080/api/students?size=1000'),
+                fetch(apiUrl("/students?size=1000")),
             ]);
             const leavesData = await leavesRes.json();
             const studentsData = await studentsRes.json();
@@ -91,7 +92,7 @@ const LeaveManagement: React.FC = () => {
         }
         setIsSubmitting(true);
         try {
-            const res = await fetch('http://localhost:8080/api/leave/apply', {
+            const res = await fetch(apiUrl("/leave/apply"), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -119,7 +120,7 @@ const LeaveManagement: React.FC = () => {
 
     const reviewLeave = async (leaveId: number, action: 'APPROVED' | 'REJECTED') => {
         try {
-            const res = await fetch(`http://localhost:8080/api/leave/${leaveId}/review`, {
+            const res = await fetch(apiUrl(`/leave/${leaveId}/review`), {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, remarks: reviewRemarks, approvedBy: 'Admin' }),
@@ -136,7 +137,7 @@ const LeaveManagement: React.FC = () => {
 
     const deleteLeave = async (id: number) => {
         try {
-            await fetch(`http://localhost:8080/api/leave/${id}`, { method: 'DELETE' });
+            await fetch(apiUrl(`/leave/${id}`), { method: 'DELETE' });
             toast.success('Leave request deleted');
             loadData();
         } catch { toast.error('Error'); }

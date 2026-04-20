@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import * as faceapi from 'face-api.js';
 
 /**
@@ -312,7 +313,7 @@ class FaceRecognitionService {
       const averagedDescriptor = this.averageDescriptors(samples);
       
       // Save to backend
-      const response = await fetch(`http://localhost:8080/api/students/${studentId}/face-enrollment`, {
+      const response = await fetch(apiUrl(`/students/${studentId}/face-enrollment`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -355,7 +356,7 @@ class FaceRecognitionService {
     try {
       // Get enrolled students from backend
       console.log('📡 Fetching enrolled faces...');
-      const response = await fetch('http://localhost:8080/api/students/enrolled-faces');
+      const response = await fetch(apiUrl("/students/enrolled-faces"));
       if (!response.ok) {
         console.error('❌ Failed to fetch enrolled faces, status:', response.status);
         return null;
@@ -420,7 +421,7 @@ class FaceRecognitionService {
    */
   async markAttendance(studentId: string, confidence: number, slotId?: number, subject?: string): Promise<MarkAttendanceResult> {
     try {
-      const response = await fetch('http://localhost:8080/api/attendance', {
+      const response = await fetch(apiUrl("/attendance"), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -54,7 +55,7 @@ const LiveAttendanceFeed: React.FC<LiveAttendanceFeedProps> = ({
 
   const loadRecentAttendance = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/attendance/today');
+      const response = await fetch(apiUrl("/attendance/today"));
       
       if (!response.ok) {
         console.error('Failed to fetch attendance:', response.status);

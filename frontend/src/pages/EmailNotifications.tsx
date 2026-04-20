@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -28,7 +29,7 @@ const EmailNotifications: React.FC = () => {
   const [emailHistory, setEmailHistory] = useState<EmailRecord[]>([]);
   const [adminEmail, setAdminEmail] = useState('admin@college.edu');
 
-  const API_BASE_URL = 'http://localhost:8080/api';
+  const API_BASE_URL = apiUrl("");
 
   useEffect(() => {
     loadEmailHistory();

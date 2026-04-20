@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { Camera, Users, Target, Settings, BarChart3, Eye, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -53,7 +54,7 @@ const FaceRecognitionHub: React.FC = () => {
 
   const loadEnrolledCount = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/students/enrolled-faces');
+      const response = await fetch(apiUrl("/students/enrolled-faces"));
       if (response.ok) {
         const data = await response.json();
         const enrolledFaces = (data.success && Array.isArray(data.data)) ? data.data : [];

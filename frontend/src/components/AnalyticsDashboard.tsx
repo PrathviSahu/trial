@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import {
   BarChart,
@@ -80,9 +81,9 @@ const AnalyticsDashboard: React.FC = () => {
         
         // Fetch multiple endpoints in parallel
         const [studentsRes, todayStatsRes, weeklyDataRes] = await Promise.all([
-          fetch('http://localhost:8080/api/students?size=1000'),
-          fetch('http://localhost:8080/api/attendance/stats/today'),
-          fetch('http://localhost:8080/api/attendance/weekly-stats')
+          fetch(apiUrl("/students?size=1000")),
+          fetch(apiUrl("/attendance/stats/today")),
+          fetch(apiUrl("/attendance/weekly-stats"))
         ]);
 
         const studentsData = await studentsRes.json();

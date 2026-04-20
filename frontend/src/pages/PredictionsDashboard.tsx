@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -51,7 +52,7 @@ const PredictionsDashboard: React.FC = () => {
   const loadPredictions = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8080/api/predictions/all');
+      const response = await fetch(apiUrl("/predictions/all"));
       const data = await response.json();
 
       if (data.success) {

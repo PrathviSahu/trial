@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, CheckCircle, XCircle, RotateCcw, User, AlertTriangle, Eye, Zap, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -88,7 +89,7 @@ const MultiAngleFaceEnrollment: React.FC<MultiAngleFaceEnrollmentProps> = ({
       setLoadingStudents(true);
       console.log('🔄 Loading students from database...');
       
-      const response = await fetch('http://localhost:8080/api/students');
+      const response = await fetch(apiUrl("/students"));
       console.log('📡 Response status:', response.status);
       
       if (response.ok) {

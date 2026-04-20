@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import * as faceapi from 'face-api.js';
 
 // Enhanced interfaces for comprehensive face recognition
@@ -462,7 +463,7 @@ class AdvancedFaceRecognitionService {
         enrollmentSteps: enrollmentData.enrollmentSteps
       });
       
-      const response = await fetch(`http://localhost:8080/api/students/${enrollment.studentId}/face-enrollment`, {
+      const response = await fetch(apiUrl(`/students/${enrollment.studentId}/face-enrollment`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -502,7 +503,7 @@ class AdvancedFaceRecognitionService {
 
       console.log(`💾 Quick enrollment for student ${studentId}...`);
       
-      const response = await fetch(`http://localhost:8080/api/students/${studentId}/face-enrollment`, {
+      const response = await fetch(apiUrl(`/students/${studentId}/face-enrollment`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -666,7 +667,7 @@ class AdvancedFaceRecognitionService {
   // Get enrolled faces from backend
   private async getEnrolledFacesFromBackend(): Promise<any[]> {
     try {
-      const response = await fetch('http://localhost:8080/api/students/enrolled-faces');
+      const response = await fetch(apiUrl("/students/enrolled-faces"));
       if (!response.ok) {
         throw new Error('Failed to fetch enrolled faces');
       }
@@ -702,7 +703,7 @@ class AdvancedFaceRecognitionService {
 
       console.log(`📝 Marking attendance for ${studentName}...`);
       
-      const response = await fetch('http://localhost:8080/api/attendance', {
+      const response = await fetch(apiUrl("/attendance"), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

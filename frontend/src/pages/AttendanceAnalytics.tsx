@@ -1,3 +1,4 @@
+import { apiUrl } from '../config/api';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -38,8 +39,8 @@ const AttendanceAnalytics: React.FC = () => {
         setIsLoading(true);
         try {
             const [attRes, studRes] = await Promise.all([
-                fetch('http://localhost:8080/api/attendance'),
-                fetch('http://localhost:8080/api/students?size=1000'),
+                fetch(apiUrl("/attendance")),
+                fetch(apiUrl("/students?size=1000")),
             ]);
             const attData = await attRes.json();
             const studData = await studRes.json();

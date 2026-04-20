@@ -1,5 +1,5 @@
 import { apiService } from './api';
-import { API_ENDPOINTS, API_CONFIG, Department } from '../config/api';
+import { apiUrl, API_ENDPOINTS, API_CONFIG, Department } from '../config/api';
 import { ApiResponse } from './authService';
 
 export interface Student {
@@ -59,7 +59,7 @@ class StudentService {
    */
   async createStudent(student: Student): Promise<Student> {
     try {
-      const response = await fetch('http://localhost:8080/api/students', {
+      const response = await fetch(apiUrl("/students"), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(student)
@@ -86,7 +86,7 @@ class StudentService {
    */
   async getAllStudents(params: StudentSearchParams = {}): Promise<PaginatedResponse<Student>> {
     try {
-      const response = await fetch('http://localhost:8080/api/students');
+      const response = await fetch(apiUrl("/students"));
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

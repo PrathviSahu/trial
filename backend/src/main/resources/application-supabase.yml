@@ -13,9 +13,9 @@ spring:
   
   # Supabase PostgreSQL Database Configuration
   datasource:
-    url: ${SUPABASE_DB_URL:jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:6543/postgres}
-    username: ${SUPABASE_DB_USERNAME:postgres.nxnxnxnxnxnxnxnxnxnx}
-    password: ${SUPABASE_DB_PASSWORD:Pass@12345}
+    url: ${SPRING_DATASOURCE_URL:${SUPABASE_DB_URL}}
+    username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USERNAME}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
     
   # JPA/Hibernate Configuration for PostgreSQL
