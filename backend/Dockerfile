@@ -1,18 +1,16 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# -------- build stage --------
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
-
-COPY pom.xml .
-COPY src ./src
+COPY . .
 
 RUN mvn clean package -DskipTests
 
-FROM openjdk:17-jdk-slim
+# -------- run stage --------
+FROM eclipse-temurin:17-jdk-jammy
 
 WORKDIR /app
 
-COPY --from=build /app/target/major-project-1.0.0.jar app.jar
+COPY --from=builder /app/target/*.jar app.jar
 
-EXPOSE 8080
-
-CMD ["java", "-jar", "app.jar", "--server.port=${PORT:-8080}"]
+CMD ["java","-jar","app.jar"]
