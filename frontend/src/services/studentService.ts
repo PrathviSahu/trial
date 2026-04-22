@@ -1,6 +1,7 @@
 import { apiService } from './api';
 import { apiUrl, API_ENDPOINTS, API_CONFIG, Department } from '../config/api';
 import { ApiResponse } from './authService';
+import { fetchJson } from '../utils/http';
 
 export interface Student {
   id?: number;
@@ -85,30 +86,20 @@ class StudentService {
    * Get all students with pagination
    */
   async getAllStudents(params: StudentSearchParams = {}): Promise<PaginatedResponse<Student>> {
-    try {
-      const response = await fetch(apiUrl("/students"));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success && data.data) {
-        return data.data;
-      } else {
-        throw new Error('Failed to fetch students');
-      }
-    } catch (error: any) {
-      return {
-        content: [],
-        pageable: { sort: {}, pageNumber: 0, pageSize: 10 },
-        totalElements: 0,
-        totalPages: 0,
-        first: true,
-        last: true,
-      };
+    const queryParams = new URLSearchParams();
+
+    if (params.page !== undefined) queryParams.append('page', params.page.toString());
+    if (params.size !== undefined) queryParams.append('size', params.size.toString());
+
+    const queryString = queryParams.toString();
+    const path = `/students/summary${queryString ? `?${queryString}` : ''}`;
+    const data = await fetchJson<ApiResponse<PaginatedResponse<Student>>>(path);
+
+    if (data.success && data.data) {
+      return data.data;
     }
+
+    throw new Error(data.message || 'Failed to fetch students');
   }
 
   /**

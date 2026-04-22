@@ -1,4 +1,3 @@
-import { apiUrl } from '../config/api';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -37,6 +36,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import LiveAttendanceFeed from '../components/LiveAttendanceFeed';
+import { fetchJson, HttpTimeoutError } from '../utils/http';
 
 
 interface StatCardProps {
@@ -113,6 +113,7 @@ const Dashboard: React.FC = () => {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [alertData, setAlertData] = useState({ lowAttendance: 0, pendingEnrollment: 0 });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Update time every second
   useEffect(() => {
@@ -128,75 +129,30 @@ const Dashboard: React.FC = () => {
     const loadRealData = async () => {
       try {
         setIsLoading(true);
+        setLoadError(null);
 
-        // Fetch real data from backend
-        const [studentsRes, todayStatsRes, departmentStatsRes, attendanceRes, predictionsRes] = await Promise.all([
-          fetch(apiUrl("/students?size=1000")),
-          fetch(apiUrl("/attendance/stats/today")),
-          fetch(apiUrl("/students/stats/department")),
-          fetch(apiUrl("/attendance")),
-          fetch(apiUrl("/predictions/all")),
-        ]);
+        const summaryResponse = await fetchJson<any>('/dashboard/summary');
 
-        const studentsData = await studentsRes.json();
-        const todayStats = await todayStatsRes.json();
-        const departmentStats = await departmentStatsRes.json();
-        const attendanceData = await attendanceRes.json();
-        const predictionsData = await predictionsRes.json();
-
-        if (studentsData.success && todayStats.success) {
-          const allStudents = studentsData.data.content;
-          const enrolledStudents = allStudents.filter((s: any) => s.faceEnrolled);
-          const totalCount = todayStats.data.totalStudents;
-          const presentCount = todayStats.data.presentCount;
-
-          setRealStats({
-            totalStudents: totalCount,
-            presentToday: presentCount,
-            attendanceRate: totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0,
-            faceEnrolled: enrolledStudents.length
-          });
-
-          // Compute pending enrollment alert count
-          const pendingEnrollment = totalCount - enrolledStudents.length;
-
-          // Compute low attendance count from predictions
-          let lowAttendance = 0;
-          if (predictionsData.success && predictionsData.data?.absentStudents) {
-            lowAttendance = predictionsData.data.absentStudents.filter(
-              (s: any) => s.riskLevel === 'high'
-            ).length;
-          }
-          setAlertData({ lowAttendance, pendingEnrollment });
+        if (!summaryResponse.success || !summaryResponse.data) {
+          throw new Error(summaryResponse.message || 'Failed to load dashboard summary');
         }
 
-        if (departmentStats.success && departmentStats.data) {
-          setDepartmentData(departmentStats.data);
-        }
-
-        // Build real 7-day attendance trend
-        if (attendanceData.success && attendanceData.data) {
-          const last7 = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - (6 - i));
-            return d.toISOString().split('T')[0];
-          });
-          const records: any[] = attendanceData.data;
-          const trend = last7.map(date => {
-            const dayRecords = records.filter((r: any) =>
-              new Date(r.timestamp).toISOString().split('T')[0] === date
-            );
-            return {
-              date: date.slice(5), // MM-DD
-              present: dayRecords.length,
-            };
-          });
-          setTrendData(trend);
-        }
+        const summary = summaryResponse.data;
+        setRealStats(summary.stats);
+        setAlertData(summary.alerts);
+        setDepartmentData(summary.departmentDistribution || []);
+        setTrendData(summary.attendanceTrend || []);
 
         setLastUpdated(new Date());
       } catch (error) {
         console.error('Failed to load real data:', error);
+        if (error instanceof HttpTimeoutError) {
+          setLoadError(error.message);
+        } else if (error instanceof Error) {
+          setLoadError(error.message);
+        } else {
+          setLoadError('Failed to load dashboard data.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -252,6 +208,23 @@ const Dashboard: React.FC = () => {
       </motion.div>
 
       {/* Stats Cards */}
+      {loadError && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-semibold">Dashboard data is delayed</p>
+              <p>{loadError}</p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="shrink-0 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-200 dark:bg-amber-800/50 dark:text-amber-100 dark:hover:bg-amber-800"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Students"

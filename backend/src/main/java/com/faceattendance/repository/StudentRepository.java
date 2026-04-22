@@ -16,10 +16,15 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByDepartment(String department);
     
     List<Student> findByIsActive(Boolean isActive);
+
+    long countByFaceEnrolledTrue();
     
     @Query("SELECT s FROM Student s WHERE s.faceEnrolled = true")
     List<Student> findAllEnrolledStudents();
     
     @Query("SELECT s FROM Student s WHERE s.faceDescriptor IS NOT NULL AND s.faceDescriptor != ''")
     List<Student> findStudentsWithFaceData();
+
+    @Query("SELECT s.department, COUNT(s) FROM Student s WHERE s.department IS NOT NULL AND s.department <> '' GROUP BY s.department")
+    List<Object[]> countByDepartment();
 }

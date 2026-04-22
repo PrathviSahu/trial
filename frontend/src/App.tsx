@@ -23,7 +23,6 @@ import EmailNotifications from './pages/EmailNotifications';
 import GuardianPortal from './pages/GuardianPortal';
 
 import AttendanceCertificate from './pages/AttendanceCertificate';
-import QRCodeAttendance from './pages/QRCodeAttendance';
 import SMSNotifications from './pages/SMSNotifications';
 import LeaveManagement from './pages/LeaveManagement';
 import AttendanceAnalytics from './pages/AttendanceAnalytics';
@@ -256,20 +255,6 @@ const AppRoutes: React.FC = () => {
                 transition={{ duration: 0.3 }}
               >
                 <AttendanceCertificate />
-              </motion.div>
-            }
-          />
-
-          <Route
-            path="qr-attendance"
-            element={
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <QRCodeAttendance />
               </motion.div>
             }
           />

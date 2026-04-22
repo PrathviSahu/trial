@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/students")
@@ -28,7 +30,8 @@ public class StudentController {
         
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<Student> studentPage = studentRepository.findAll(pageable);
+            Page<Map<String, Object>> studentPage = studentRepository.findAll(pageable)
+                    .map(this::toStudentSummary);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -76,6 +79,13 @@ public class StudentController {
             errorResponse.put("message", "Error fetching enrolled students: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<Map<String, Object>> getStudentSummaries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        return getAllStudents(page, size);
     }
     
     @PostMapping
@@ -231,32 +241,23 @@ public class StudentController {
     @GetMapping("/stats/department")
     public ResponseEntity<Map<String, Object>> getDepartmentStats() {
         try {
-            List<Student> allStudents = studentRepository.findAll();
-            
-            // Group students by department and count
-            Map<String, Integer> departmentCounts = new HashMap<>();
-            for (Student student : allStudents) {
-                String dept = student.getDepartment();
-                if (dept != null && !dept.isEmpty()) {
-                    departmentCounts.put(dept, departmentCounts.getOrDefault(dept, 0) + 1);
-                }
-            }
-            
-            // Define colors for departments
             String[] colors = {"#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#14B8A6", "#F97316"};
-            
-            // Convert to response format
-            java.util.List<Map<String, Object>> stats = new java.util.ArrayList<>();
-            int colorIndex = 0;
-            for (Map.Entry<String, Integer> entry : departmentCounts.entrySet()) {
-                Map<String, Object> stat = new HashMap<>();
-                stat.put("department", entry.getKey());
-                stat.put("name", entry.getKey());
-                stat.put("value", entry.getValue());
-                stat.put("totalStudents", entry.getValue());
-                stat.put("color", colors[colorIndex % colors.length]);
-                stats.add(stat);
-                colorIndex++;
+            List<Object[]> departmentCounts = studentRepository.countByDepartment();
+
+            List<Map<String, Object>> stats = departmentCounts.stream()
+                    .map(row -> {
+                        Map<String, Object> stat = new LinkedHashMap<>();
+                        stat.put("department", row[0]);
+                        stat.put("name", row[0]);
+                        stat.put("value", ((Number) row[1]).intValue());
+                        stat.put("totalStudents", ((Number) row[1]).intValue());
+                        return stat;
+                    })
+                    .collect(Collectors.toList());
+
+            for (int i = 0; i < stats.size(); i++) {
+                Map<String, Object> stat = stats.get(i);
+                stat.put("color", colors[i % colors.length]);
             }
             
             Map<String, Object> response = new HashMap<>();
@@ -270,5 +271,25 @@ public class StudentController {
             errorResponse.put("message", "Error fetching department statistics: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
+    }
+
+    private Map<String, Object> toStudentSummary(Student student) {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("id", student.getId());
+        summary.put("ienNumber", student.getIenNumber());
+        summary.put("rollNumber", student.getRollNumber());
+        summary.put("firstName", student.getFirstName());
+        summary.put("lastName", student.getLastName());
+        summary.put("email", student.getEmail());
+        summary.put("phoneNumber", student.getPhoneNumber());
+        summary.put("department", student.getDepartment());
+        summary.put("branch", student.getBranch());
+        summary.put("year", student.getYear());
+        summary.put("semester", student.getSemester());
+        summary.put("isActive", student.getIsActive());
+        summary.put("faceEnrolled", student.getFaceEnrolled());
+        summary.put("createdAt", student.getCreatedAt());
+        summary.put("updatedAt", student.getUpdatedAt());
+        return summary;
     }
 }

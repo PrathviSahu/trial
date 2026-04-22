@@ -23,7 +23,6 @@ import {
   UserCheck,
   Calculator,
   Award,
-  QrCode,
   MessageSquare,
   FileCheck,
   BarChart3,
@@ -105,13 +104,6 @@ const menuItems: MenuItem[] = [
     icon: <Award className="w-5 h-5" />,
     path: '/attendance-certificate',
     description: 'Generate attendance certificates',
-  },
-  {
-    id: 'qr-attendance',
-    label: 'QR Attendance',
-    icon: <QrCode className="w-5 h-5" />,
-    path: '/qr-attendance',
-    description: 'QR code based attendance',
   },
   {
     id: 'sms-notifications',

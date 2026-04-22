@@ -22,6 +22,7 @@ import BulkStudentImport from '../components/BulkStudentImport';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Student, studentService } from '../services/studentService';
 import { apiUrl, DEPARTMENTS, Department } from '../config/api';
+import { HttpTimeoutError } from '../utils/http';
 
 interface StudentFormData {
   ienNumber: string;
@@ -229,6 +230,7 @@ const StudentManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState<Department | ''>('');
   const [filterYear, setFilterYear] = useState<number | ''>('');
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<StudentFormData>({
     ienNumber: '',
@@ -255,13 +257,16 @@ const StudentManagement: React.FC = () => {
   const loadStudents = async () => {
     try {
       setIsLoading(true);
-      // Force refresh with timestamp to avoid caching
+      setLoadError(null);
       const response = await studentService.getAllStudents({ size: 100 });
-      console.log('🔄 Loaded students:', response.content);
       setStudents(response.content);
     } catch (error: any) {
       console.error('❌ Failed to load students:', error);
-      toast.error('Failed to load students');
+      const message = error instanceof HttpTimeoutError
+        ? error.message
+        : error?.message || 'Failed to load students';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -499,6 +504,23 @@ const StudentManagement: React.FC = () => {
       </div>
 
       {/* Filters */}
+      {loadError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-semibold">Student records are taking longer than expected</p>
+              <p>{loadError}</p>
+            </div>
+            <button
+              onClick={loadStudents}
+              className="shrink-0 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-200 dark:bg-amber-800/50 dark:text-amber-100 dark:hover:bg-amber-800"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center space-x-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex-1">
           <div className="relative">
@@ -541,7 +563,22 @@ const StudentManagement: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <LoadingSpinner size="lg" />
+            <div className="text-center">
+              <LoadingSpinner size="lg" />
+              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                Loading student records...
+              </p>
+            </div>
+          </div>
+        ) : filteredStudents.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <Users className="mx-auto mb-3 h-10 w-10 text-gray-300 dark:text-gray-600" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              No students to show
+            </h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {loadError ? 'The list could not be loaded from the backend yet.' : 'Add your first student or adjust the filters.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
