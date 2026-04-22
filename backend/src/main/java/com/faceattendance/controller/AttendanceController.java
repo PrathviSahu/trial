@@ -1,5 +1,7 @@
 package com.faceattendance.controller;
 
+import com.faceattendance.dto.AttendanceRecordDto;
+import com.faceattendance.dto.StudentAttendanceDto;
 import com.faceattendance.model.Attendance;
 import com.faceattendance.model.Student;
 import com.faceattendance.model.TimetableSlot;
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/attendance")
@@ -118,7 +121,10 @@ public class AttendanceController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllAttendance() {
         try {
-            List<Attendance> attendanceList = attendanceRepository.findAll();
+            List<AttendanceRecordDto> attendanceList = attendanceRepository.findAll()
+                    .stream()
+                    .map(this::toAttendanceDto)
+                    .collect(Collectors.toList());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -136,7 +142,10 @@ public class AttendanceController {
     @GetMapping("/student/{studentId}")
     public ResponseEntity<Map<String, Object>> getStudentAttendance(@PathVariable Long studentId) {
         try {
-            List<Attendance> attendanceList = attendanceRepository.findByStudentId(studentId);
+            List<AttendanceRecordDto> attendanceList = attendanceRepository.findByStudentId(studentId)
+                    .stream()
+                    .map(this::toAttendanceDto)
+                    .collect(Collectors.toList());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -155,7 +164,7 @@ public class AttendanceController {
     public ResponseEntity<Map<String, Object>> getTodayAttendance() {
         try {
             // Try to get attendance, return empty list if error
-            List<Attendance> todayAttendance = new java.util.ArrayList<>();
+            List<AttendanceRecordDto> todayAttendance = new java.util.ArrayList<>();
 
             try {
                 List<Attendance> allAttendance = attendanceRepository.findAll();
@@ -164,6 +173,7 @@ public class AttendanceController {
                 todayAttendance = allAttendance.stream()
                         .filter(a -> a.getTimestamp() != null && a.getTimestamp().toLocalDate().equals(today))
                         .sorted((a, b) -> b.getTimestamp().compareTo(a.getTimestamp()))
+                        .map(this::toAttendanceDto)
                         .collect(java.util.stream.Collectors.toList());
             } catch (Exception e) {
                 // If database error, return empty list instead of failing
@@ -317,7 +327,7 @@ public class AttendanceController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("data", records);
+            response.put("data", records.stream().map(this::toAttendanceDto).collect(Collectors.toList()));
             response.put("count", records.size());
             return ResponseEntity.ok(response);
 
@@ -327,5 +337,33 @@ public class AttendanceController {
             errorResponse.put("message", "Error fetching slot attendance: " + e.getMessage());
             return ResponseEntity.status(500).body(errorResponse);
         }
+    }
+
+    private AttendanceRecordDto toAttendanceDto(Attendance attendance) {
+        Student student = attendance.getStudent();
+        StudentAttendanceDto studentDto = null;
+
+        if (student != null) {
+            studentDto = new StudentAttendanceDto(
+                    student.getId(),
+                    student.getFirstName(),
+                    student.getLastName(),
+                    student.getIenNumber(),
+                    student.getDepartment(),
+                    student.getBranch()
+            );
+        }
+
+        return new AttendanceRecordDto(
+                attendance.getId(),
+                attendance.getTimestamp(),
+                attendance.getConfidence(),
+                attendance.getMethod(),
+                attendance.getMarkedBy(),
+                attendance.getSubject(),
+                attendance.getClassId(),
+                attendance.getStatus(),
+                studentDto
+        );
     }
 }

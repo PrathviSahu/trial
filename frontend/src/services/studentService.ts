@@ -90,9 +90,14 @@ class StudentService {
 
     if (params.page !== undefined) queryParams.append('page', params.page.toString());
     if (params.size !== undefined) queryParams.append('size', params.size.toString());
+    if (params.q) queryParams.append('q', params.q);
+    if (params.department) queryParams.append('department', params.department);
+    if (params.year !== undefined) queryParams.append('year', params.year.toString());
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
 
     const queryString = queryParams.toString();
-    const path = `/students/summary${queryString ? `?${queryString}` : ''}`;
+    const path = `/students${queryString ? `?${queryString}` : ''}`;
     const data = await fetchJson<ApiResponse<PaginatedResponse<Student>>>(path);
 
     if (data.success && data.data) {

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import StudentProfileModal from './StudentProfileModal';
+import { fetchJson, HttpTimeoutError } from '../utils/http';
 
 interface AttendanceRecord {
   id: number;
@@ -46,6 +47,7 @@ const LiveAttendanceFeed: React.FC<LiveAttendanceFeedProps> = ({
   const [newRecordsCount, setNewRecordsCount] = useState(0);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadRecentAttendance();
@@ -55,16 +57,8 @@ const LiveAttendanceFeed: React.FC<LiveAttendanceFeedProps> = ({
 
   const loadRecentAttendance = async () => {
     try {
-      const response = await fetch(apiUrl("/attendance/today"));
-      
-      if (!response.ok) {
-        console.error('Failed to fetch attendance:', response.status);
-        setRecentAttendance([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      const data = await response.json();
+      setLoadError(null);
+      const data = await fetchJson<any>("/attendance/today");
 
       if (data.success && data.data) {
         const records: AttendanceRecord[] = Array.isArray(data.data) ? data.data : [];
@@ -94,6 +88,13 @@ const LiveAttendanceFeed: React.FC<LiveAttendanceFeedProps> = ({
     } catch (error) {
       console.error('Error loading recent attendance:', error);
       setRecentAttendance([]);
+      if (error instanceof HttpTimeoutError) {
+        setLoadError(error.message);
+      } else if (error instanceof Error) {
+        setLoadError(error.message);
+      } else {
+        setLoadError('Failed to load recent attendance.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -150,6 +151,11 @@ const LiveAttendanceFeed: React.FC<LiveAttendanceFeedProps> = ({
             </div>
 
             <div className="flex items-center space-x-2">
+              {loadError && (
+                <div className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 rounded-full text-xs font-semibold">
+                  Backend delayed
+                </div>
+              )}
               {newRecordsCount > 0 && (
                 <motion.div
                   initial={{ scale: 0 }}
@@ -166,6 +172,12 @@ const LiveAttendanceFeed: React.FC<LiveAttendanceFeedProps> = ({
               </div>
             </div>
           </div>
+
+          {loadError && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+              {loadError}
+            </div>
+          )}
         </div>
       )}
 

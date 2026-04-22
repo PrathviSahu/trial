@@ -1,11 +1,16 @@
 package com.faceattendance.controller;
 
+import com.faceattendance.dto.StudentDetailDto;
+import com.faceattendance.dto.StudentFaceDto;
+import com.faceattendance.dto.StudentSummaryDto;
 import com.faceattendance.model.Student;
 import com.faceattendance.repository.StudentRepository;
+import com.faceattendance.repository.spec.StudentSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,12 +31,22 @@ public class StudentController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllStudents(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "1000") int size) {
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false, name = "q") String query,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Boolean faceEnrolled,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
         
         try {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Map<String, Object>> studentPage = studentRepository.findAll(pageable)
-                    .map(this::toStudentSummary);
+            Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
+            Pageable pageable = PageRequest.of(page, size, sort);
+
+            Page<StudentSummaryDto> studentPage = studentRepository
+                    .findAll(StudentSpecifications.build(query, department, year, faceEnrolled, isActive), pageable)
+                    .map(this::toStudentSummaryDto);
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -52,7 +67,7 @@ public class StudentController {
                 .map(student -> {
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", true);
-                    response.put("data", student);
+                    response.put("data", toStudentDetailDto(student));
                     return ResponseEntity.ok(response);
                 })
                 .orElseGet(() -> {
@@ -67,10 +82,14 @@ public class StudentController {
     public ResponseEntity<Map<String, Object>> getEnrolledStudents() {
         try {
             List<Student> enrolledStudents = studentRepository.findStudentsWithFaceData();
+
+            List<StudentFaceDto> dtoList = enrolledStudents.stream()
+                    .map(this::toStudentFaceDto)
+                    .collect(Collectors.toList());
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("data", enrolledStudents);
+            response.put("data", dtoList);
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -84,8 +103,15 @@ public class StudentController {
     @GetMapping("/summary")
     public ResponseEntity<Map<String, Object>> getStudentSummaries(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
-        return getAllStudents(page, size);
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false, name = "q") String query,
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Boolean faceEnrolled,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+        return getAllStudents(page, size, query, department, year, faceEnrolled, isActive, sortBy, sortDir);
     }
     
     @PostMapping
@@ -95,7 +121,7 @@ public class StudentController {
             
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("data", savedStudent);
+            response.put("data", toStudentDetailDto(savedStudent));
             response.put("message", "Student created successfully");
             
             return ResponseEntity.ok(response);
@@ -123,7 +149,7 @@ public class StudentController {
                         Map<String, Object> response = new HashMap<>();
                         response.put("success", true);
                         response.put("message", "Face enrolled successfully");
-                        response.put("data", student);
+                        response.put("data", toStudentDetailDto(student));
                         
                         return ResponseEntity.ok(response);
                     })
@@ -153,7 +179,7 @@ public class StudentController {
                         Map<String, Object> response = new HashMap<>();
                         response.put("success", true);
                         response.put("message", "Face data removed successfully");
-                        response.put("data", student);
+                        response.put("data", toStudentDetailDto(student));
                         
                         return ResponseEntity.ok(response);
                     })
@@ -192,7 +218,7 @@ public class StudentController {
                         
                         Map<String, Object> response = new HashMap<>();
                         response.put("success", true);
-                        response.put("data", updatedStudent);
+                        response.put("data", toStudentDetailDto(updatedStudent));
                         response.put("message", "Student updated successfully");
                         
                         return ResponseEntity.ok(response);
@@ -273,23 +299,61 @@ public class StudentController {
         }
     }
 
-    private Map<String, Object> toStudentSummary(Student student) {
-        Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("id", student.getId());
-        summary.put("ienNumber", student.getIenNumber());
-        summary.put("rollNumber", student.getRollNumber());
-        summary.put("firstName", student.getFirstName());
-        summary.put("lastName", student.getLastName());
-        summary.put("email", student.getEmail());
-        summary.put("phoneNumber", student.getPhoneNumber());
-        summary.put("department", student.getDepartment());
-        summary.put("branch", student.getBranch());
-        summary.put("year", student.getYear());
-        summary.put("semester", student.getSemester());
-        summary.put("isActive", student.getIsActive());
-        summary.put("faceEnrolled", student.getFaceEnrolled());
-        summary.put("createdAt", student.getCreatedAt());
-        summary.put("updatedAt", student.getUpdatedAt());
-        return summary;
+    private StudentSummaryDto toStudentSummaryDto(Student student) {
+        return new StudentSummaryDto(
+                student.getId(),
+                student.getIenNumber(),
+                student.getRollNumber(),
+                student.getFirstName(),
+                student.getLastName(),
+                student.getEmail(),
+                student.getPhoneNumber(),
+                student.getDepartment(),
+                student.getBranch(),
+                student.getYear(),
+                student.getSemester(),
+                student.getIsActive(),
+                student.getFaceEnrolled(),
+                student.getCreatedAt(),
+                student.getUpdatedAt()
+        );
+    }
+
+    private StudentDetailDto toStudentDetailDto(Student student) {
+        return new StudentDetailDto(
+                student.getId(),
+                student.getIenNumber(),
+                student.getRollNumber(),
+                student.getFirstName(),
+                student.getLastName(),
+                student.getEmail(),
+                student.getPhoneNumber(),
+                student.getDepartment(),
+                student.getBranch(),
+                student.getYear(),
+                student.getSemester(),
+                student.getIsActive(),
+                student.getFaceEnrolled(),
+                student.getFaceDescriptor(),
+                student.getCreatedAt(),
+                student.getUpdatedAt()
+        );
+    }
+
+    private StudentFaceDto toStudentFaceDto(Student student) {
+        return new StudentFaceDto(
+                student.getId(),
+                student.getIenNumber(),
+                student.getRollNumber(),
+                student.getFirstName(),
+                student.getLastName(),
+                student.getEmail(),
+                student.getDepartment(),
+                student.getBranch(),
+                student.getYear(),
+                student.getSemester(),
+                student.getFaceEnrolled(),
+                student.getFaceDescriptor()
+        );
     }
 }

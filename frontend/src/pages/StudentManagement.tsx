@@ -222,6 +222,10 @@ const StudentModal: React.FC<{
 const StudentManagement: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showFaceCapture, setShowFaceCapture] = useState(false);
@@ -251,15 +255,35 @@ const StudentManagement: React.FC = () => {
 
   // Load students
   useEffect(() => {
-    loadStudents();
-  }, []);
+    // Debounce query updates so we don't hammer the backend while typing.
+    const t = window.setTimeout(() => {
+      loadStudents();
+    }, 300);
+    return () => window.clearTimeout(t);
+  }, [page, pageSize, searchTerm, filterDepartment, filterYear]);
+
+  // Reset pagination when filters change.
+  useEffect(() => {
+    setPage(0);
+  }, [searchTerm, filterDepartment, filterYear]);
 
   const loadStudents = async () => {
     try {
       setIsLoading(true);
       setLoadError(null);
-      const response = await studentService.getAllStudents({ size: 100 });
+      const response = await studentService.getAllStudents({
+        page,
+        size: pageSize,
+        q: searchTerm.trim() ? searchTerm.trim() : undefined,
+        department: filterDepartment || undefined,
+        year: typeof filterYear === 'number' ? filterYear : undefined,
+        sortBy: 'createdAt',
+        sortDir: 'desc',
+      });
+
       setStudents(response.content);
+      setTotalElements(response.totalElements || 0);
+      setTotalPages(response.totalPages || 0);
     } catch (error: any) {
       console.error('❌ Failed to load students:', error);
       const message = error instanceof HttpTimeoutError
@@ -447,20 +471,7 @@ const StudentManagement: React.FC = () => {
     }
   };
 
-  // Filter students
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = 
-      student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.ienNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.rollNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesDepartment = !filterDepartment || student.department === filterDepartment;
-    const matchesYear = !filterYear || student.year === filterYear;
-    
-    return matchesSearch && matchesDepartment && matchesYear;
-  });
+  const filteredStudents = students;
 
   return (
     <div className="space-y-6">
@@ -554,9 +565,23 @@ const StudentManagement: React.FC = () => {
             <option key={year} value={year}>Year {year}</option>
           ))}
         </select>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {filteredStudents.length} students
-        </span>
+        <div className="flex items-center space-x-3">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
+            {totalElements} students
+          </span>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(parseInt(e.target.value))}
+            className="px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+            title="Rows per page"
+          >
+            {[10, 25, 50, 100].map((size) => (
+              <option key={size} value={size}>
+                {size}/page
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Students Table */}
@@ -697,6 +722,28 @@ const StudentManagement: React.FC = () => {
                 ))}
               </tbody>
             </table>
+
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Page {totalPages === 0 ? 0 : page + 1} of {totalPages}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page <= 0 || isLoading}
+                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setPage((p) => Math.min(Math.max(0, totalPages - 1), p + 1))}
+                  disabled={isLoading || totalPages === 0 || page >= totalPages - 1}
+                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
