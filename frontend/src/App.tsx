@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'react-hot-toast';
@@ -29,6 +29,7 @@ import AttendanceAnalytics from './pages/AttendanceAnalytics';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
 import { FEATURES } from './config/features';
+import { fetchJson, HttpTimeoutError } from './utils/http';
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -325,6 +326,45 @@ const AppRoutes: React.FC = () => {
 
 // Main App Component
 const App: React.FC = () => {
+  useEffect(() => {
+    const HEARTBEAT_INTERVAL_MS = 8 * 60 * 1000;
+
+    const pingBackend = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+
+      try {
+        await fetchJson('/health');
+        console.log('💓 Backend heartbeat ok');
+      } catch (error) {
+        if (error instanceof HttpTimeoutError) {
+          console.log('💓 Backend still waking up');
+          return;
+        }
+        console.warn('💓 Backend heartbeat failed:', error);
+      }
+    };
+
+    void pingBackend();
+    const intervalId = window.setInterval(pingBackend, HEARTBEAT_INTERVAL_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void pingBackend();
+      }
+    };
+
+    window.addEventListener('focus', pingBackend);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', pingBackend);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
