@@ -14,6 +14,11 @@ import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Health Check Controller
@@ -25,6 +30,12 @@ import java.util.Map;
 @RequestMapping
 @Slf4j
 public class HealthController {
+
+    private static final ExecutorService HEALTH_EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+        Thread thread = new Thread(r, "db-health-check");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     @Autowired
     private DataSource dataSource;
@@ -45,10 +56,23 @@ public class HealthController {
             healthInfo.put("version", buildProperties != null ? buildProperties.getVersion() : "1.0.0");
             
             // Check database connectivity
-            try (Connection connection = dataSource.getConnection()) {
-                healthInfo.put("database", "Connected");
-                healthInfo.put("databaseUrl", connection.getMetaData().getURL());
+            Future<Map<String, Object>> dbCheck = HEALTH_EXECUTOR.submit(() -> {
+                try (Connection connection = dataSource.getConnection()) {
+                    Map<String, Object> dbInfo = new HashMap<>();
+                    dbInfo.put("database", "Connected");
+                    dbInfo.put("databaseUrl", connection.getMetaData().getURL());
+                    return dbInfo;
+                }
+            });
+
+            try {
+                healthInfo.putAll(dbCheck.get(4, TimeUnit.SECONDS));
+            } catch (TimeoutException timeoutException) {
+                dbCheck.cancel(true);
+                healthInfo.put("database", "Waking up");
+                healthInfo.put("databaseError", "Database check timed out while the backend was starting up");
             } catch (Exception e) {
+                dbCheck.cancel(true);
                 healthInfo.put("database", "Disconnected");
                 healthInfo.put("databaseError", e.getMessage());
             }

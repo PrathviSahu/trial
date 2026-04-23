@@ -17,6 +17,10 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USERNAME}}
     password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD}}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 0
+      connection-timeout: 5000
     
   # JPA/Hibernate Configuration for PostgreSQL
   jpa:
