@@ -17,12 +17,13 @@ spring:
       maximum-pool-size: 3
       minimum-idle: 0
       connection-timeout: 5000
+      initialization-fail-timeout: -1
       
   # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
