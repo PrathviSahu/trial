@@ -5,11 +5,69 @@ import { fetchJson, HttpTimeoutError } from '../utils/http';
 
 type ConnectionState = 'checking' | 'connected' | 'waking_up' | 'disconnected';
 
+type DatabaseStatusCache = {
+  enrolledCount: number;
+  totalStudents: number;
+  connectionState: ConnectionState;
+  lastUpdated: string;
+};
+
+const CACHE_KEY = 'facetracku:database-status';
+
+const readCachedStatus = (): DatabaseStatusCache | null => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as DatabaseStatusCache;
+    if (
+      typeof parsed?.enrolledCount !== 'number' ||
+      typeof parsed?.totalStudents !== 'number' ||
+      typeof parsed?.connectionState !== 'string' ||
+      typeof parsed?.lastUpdated !== 'string'
+    ) {
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedStatus = (cache: Omit<DatabaseStatusCache, 'lastUpdated'>) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(
+      CACHE_KEY,
+      JSON.stringify({ ...cache, lastUpdated: new Date().toISOString() })
+    );
+  } catch {
+    // Best effort only. If storage is unavailable, the live fetch still works.
+  }
+};
+
+const resolveConnectionState = (databaseValue: unknown): ConnectionState => {
+  const normalized = String(databaseValue ?? '').trim().toLowerCase();
+
+  if (normalized.includes('connected')) return 'connected';
+  if (normalized.includes('waking') || normalized.includes('starting')) return 'waking_up';
+  if (normalized.includes('disconnect') || normalized.includes('down') || normalized.includes('fail')) {
+    return 'disconnected';
+  }
+
+  return 'waking_up';
+};
+
 const DatabaseStatus: React.FC = () => {
-  const [enrolledCount, setEnrolledCount] = useState(0);
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [connectionState, setConnectionState] = useState<ConnectionState>('checking');
-  const [isLoading, setIsLoading] = useState(true);
+  const cachedStatus = readCachedStatus();
+  const [enrolledCount, setEnrolledCount] = useState(cachedStatus?.enrolledCount ?? 0);
+  const [totalStudents, setTotalStudents] = useState(cachedStatus?.totalStudents ?? 0);
+  const [connectionState, setConnectionState] = useState<ConnectionState>(cachedStatus?.connectionState ?? 'checking');
+  const [isLoading, setIsLoading] = useState(!cachedStatus);
 
   useEffect(() => {
     loadDatabaseStatus();
@@ -21,9 +79,9 @@ const DatabaseStatus: React.FC = () => {
       setConnectionState('checking');
 
       const health = await fetchJson<any>('/health');
-      const databaseConnected = health?.database === 'Connected' || health?.database === 'connected';
+      const healthConnectionState = resolveConnectionState(health?.database ?? health?.status);
 
-      const [enrolledFaces, allStudents] = await Promise.all([
+      const [enrolledFacesResult, allStudentsResult] = await Promise.allSettled([
         fetchJson<any>('/students/enrolled-faces').catch((error) => {
           if (error instanceof HttpTimeoutError) {
             throw error;
@@ -38,12 +96,34 @@ const DatabaseStatus: React.FC = () => {
         }),
       ]);
 
-      setEnrolledCount(enrolledFaces?.data?.length || 0);
-      setTotalStudents(allStudents?.data?.totalElements || 0);
-      setConnectionState(databaseConnected ? 'connected' : 'disconnected');
+      const enrolledFaces =
+        enrolledFacesResult.status === 'fulfilled' ? enrolledFacesResult.value : { data: [] };
+      const allStudents =
+        allStudentsResult.status === 'fulfilled' ? allStudentsResult.value : { data: { totalElements: 0 } };
+
+      const nextEnrolledCount = enrolledFaces?.data?.length || 0;
+      const nextTotalStudents = allStudents?.data?.totalElements || 0;
+
+      setEnrolledCount(nextEnrolledCount);
+      setTotalStudents(nextTotalStudents);
+      setConnectionState(healthConnectionState);
+
+      writeCachedStatus({
+        enrolledCount: nextEnrolledCount,
+        totalStudents: nextTotalStudents,
+        connectionState: healthConnectionState,
+      });
     } catch (error) {
       console.error('Failed to load database status:', error);
-      setConnectionState(error instanceof HttpTimeoutError ? 'waking_up' : 'disconnected');
+
+      // On free Render, a timeout or transient network failure is usually a warm-up phase.
+      // We only show a hard disconnect when the backend explicitly reports it.
+      setConnectionState('waking_up');
+
+      if (cachedStatus) {
+        setEnrolledCount(cachedStatus.enrolledCount);
+        setTotalStudents(cachedStatus.totalStudents);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +277,7 @@ const DatabaseStatus: React.FC = () => {
             </h4>
             <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
               <li>• If "⏳ Waking up": Wait 30-60 seconds and refresh once</li>
-              <li>• If "❌ Disconnected": The backend health check truly failed</li>
+              <li>• If "❌ Disconnected": The backend health endpoint explicitly reported a failure</li>
               <li>• If "No Data": Try enrolling a face first</li>
               <li>• If API tests fail: Verify backend endpoints are working</li>
             </ul>
